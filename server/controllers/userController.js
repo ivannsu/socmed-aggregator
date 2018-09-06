@@ -1,6 +1,8 @@
+require('dotenv').config()
+
 const axios = require('axios');
 const User = require('../models/user');
-const JWT = require('../helpers/jwt');
+const jwt = require('jsonwebtoken');
 
 module.exports = {
 
@@ -18,43 +20,47 @@ module.exports = {
       User.findOne({email: fbEmail})
       .then(user => {
 
-        return new Promise((resolve, reject) => {
-          resolve(user);
-        });
-
-        // if(!user) {
-        //   User.create({email: fbEmail})
-        //   .then(created => {
-        //     JWT.encode({email: created.email}, (err, token) => {
-        //       if(err) {
-
-        //       } else {
-
-        //       }
-        //     });
-        //   })
-        //   .catch(err => {
-        //     res.status(500).json({
-        //       message: 'Error create new user',
-        //       error: err
-        //     });
-        //   });
-        // } else {
-          
-        // }
-      })
-      .then((user) => {
         if(!user) {
-          return User.create({email: fbEmail})
-          .then(created => {
-            JWT.encode({email: created.email}, (err, token) => {
+          User.create({email: fbEmail})
+          .then(user => {
+            jwt.sign({ email: user.email }, process.env.JWT_SECRET_KEY, function(err, token) {
               if(err) {
-
+                res.status(500).json({
+                  message: 'Error generate token',
+                  error: err
+                });
               } else {
-
+  
+                res.status(200).json({
+                  message: 'Success generate token',
+                  token: token
+                });
               }
             });
           })
+          .catch(err => {
+            res.status(500).json({
+              message: 'Error create new user',
+              error: err
+            });
+          })
+        } else {
+
+          jwt.sign({ email: user.email }, process.env.JWT_SECRET_KEY, function(err, token) {
+            if(err) {
+              res.status(500).json({
+                message: 'Error generate token',
+                error: err
+              });
+            } else {
+
+              res.status(200).json({
+                message: 'Success generate token',
+                token: token
+              });
+            }
+          });
+        }
       })
       .catch(err => {
         res.status(500).json({
@@ -68,6 +74,40 @@ module.exports = {
     .catch(err => {
       console.log(err, '<=============== ERROR[userController.js]')
     });
+  },
+
+  checkLogin: (req, res) => {
+    let token = req.headers.apptoken;
+
+    if(!token) {
+      res.status(401).json({
+        message: 'You are not authenticated'
+      });
+    } else {
+
+      jwt.verify(token, process.env.JWT_SECRET_KEY, function(err, decoded) {
+        if(err) {
+          res.status(500).json({
+            message: 'Error verify token',
+            error: err
+          });
+        } else {
+
+          User.findOne({email: decoded.email})
+          .then(user => {
+            res.status(200).json({
+              login: true
+            });
+          })
+          .catch(err => {
+            res.status(500).json({
+              message: 'No data found',
+              error: err
+            });          
+          });
+        }
+      });
+    }
   }
 
 }
