@@ -1,29 +1,18 @@
 const express = require('express');
-const app = express();
-
 const cors = require('cors');
+const mongoose = require('mongoose');
 
-const MongoClient = require('mongodb').MongoClient;
-const assert = require('assert');
-
-// Connection URL
-const url = 'mongodb://localhost:27017';
-
-// Database Name
-const dbName = 'app-aggregator';
-
-// Use connect method to connect to the server
-MongoClient.connect(url, function(err, client) {
-  assert.equal(null, err);
-  console.log("Connected successfully to server");
-
-  const db = client.db(dbName);
-
-  client.close();
-});
+const app = express();
 
 const repoRoutes = require('./routes/repoRoutes');
 const userRoutes = require('./routes/userRoutes');
+
+mongoose.connect('mongodb://localhost:27017/app-aggregator', { useNewUrlParser: true });
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log('Mongoose OK');
+});
 
 app.use(cors())
 app.use(express.urlencoded({extended: false}));
