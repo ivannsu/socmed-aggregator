@@ -35,8 +35,6 @@
 
     function statusChangeCallback(response) {
       if(response.status === 'connected') {
-        console.log(response, '<============= RESPONSE');
-
         let token = response.authResponse.accessToken;
 
         $.ajax({
