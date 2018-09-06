@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" crossorigin="anonymous">
+
+    <style>
+      body {
+        padding-top: 65px;
+      }
+
+      .navbar-right p {
+        float: right;
+        line-height: 50px;
+        color: white;
+        margin-left: 10px;
+        margin-bottom: 0px;
+      }
+
+      .row {
+        display: flex;
+
+      }
+
+      .row > div {
+        flex: 1;
+        /* border: 1px solid grey; */
+        margin-top:10px;
+      }
+
+      .row-body {
+        height: 100vw;
+      }
+
+      .row-body .box {
+        border-right: 1px solid #eee;
+      }
+
+      .row-body div:last-child {
+        border-right: none;
+      }
+
+      input.search {
+        margin-bottom: 10px;
+      }
+
+    </style>
+  </head>
+  <body>
+
+    <div class="container">
+      <div class="row">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+          <div class="container">
+            <a class="navbar-brand" href="#">HacktivGit</a>
+            <div class="navbar-right">
+              <img src="https://via.placeholder.com/50x50" />
+              <p>dmtrxw</p>
+            </div>
+          </div>
+        </nav>
+      </div>
+
+      <div class="row row-body ">
+        <div class="col-md-3 box">
+          <h4>Users</h4>
+          <ul style="list-style-type:none">
+            <li><a href="http://localhost:3001/repo/ivannsu">Ivan</a></li>
+          </ul>
+        </div>
+        <div class="col-md-3 box">
+          <input class="search" type="text" placeholder="Search..."></input>
+          <div class="list" id="stared-repo">
+            <!-- DYNAMIC DATA -->
+          </div>
+        </div>
+        <div class="col-md-6 box" id="first-repo">
+          <!-- DYNAMIC DATA -->
+        </div>
+      </div>
+
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+      
+      function findByStarred() {
+        $.ajax({
+          method: 'GET',
+          url: 'http://localhost:3001/repo/star'
+        })
+        .done(function(results) {
+
+          results.data.forEach(result => {
+            console.log(result);
+            $('#stared-repo').append(
+              `
+              <div class="card-body">
+                <h5 class="card-title">
+                  <a href="#" onclick="detail('${result.full_name}', '${result.owner.login}', '${result.description}')">${result.full_name}</a>
+                </h5>
+                <p class="card-text">description of ${result.name} : ${result.description}</p>
+                <p class="card-text">${result.stargazers_count} stars</p>
+              </div>
+              `
+            );
+
+          });
+        })
+        .fail(function(err) {
+          console.log(err); 
+        });
+      }
+
+      function getFirstRepo() {
+        $.ajax({
+          method: 'GET',
+          url: 'http://localhost:3001/repo/star'
+        })
+        .done(function(results) {
+          let result = results.data[0];
+
+          $('#first-repo').append(
+            `
+            <h1>${result.full_name}</h1>
+            <p class="lead">by <a href="#">${result.owner.login}</a></p>
+            <hr>
+            <p class="lead">${result.description}</p>
+            `
+          );
+        })
+        .fail(function(err) {
+          console.log(err); 
+        }); 
+      }
+
+      function detail(full_name, owner, description) {
+        if(description === 'null') {
+          description = 'No description';
+        }
+
+        $('#first-repo').text('');
+
+        $('#first-repo').append(
+          `
+          <h1>${full_name}</h1>
+          <p class="lead">by <a href="#">${owner}</a></p>
+          <hr>
+          <p class="lead">${description}</p>
+          `
+        );
+      }
+
+      findByStarred();
+      getFirstRepo();
+
+    </script>
+
+  </body>
+</html>
