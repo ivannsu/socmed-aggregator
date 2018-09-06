@@ -49,6 +49,67 @@
   </head>
   <body>
 
+    <script>
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId            : '708279159525713',
+          autoLogAppEvents : true,
+          xfbml            : true,
+          version          : 'v3.1'
+        });
+      };
+    
+      (function(d, s, id){
+          var js, fjs = d.getElementsByTagName(s)[0];
+          if (d.getElementById(id)) {return;}
+          js = d.createElement(s); js.id = id;
+          js.src = "https://connect.facebook.net/en_US/sdk.js";
+          fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+  
+      function checkLoginState() {
+        FB.getLoginStatus(function(response) {
+          statusChangeCallback(response);
+        });
+      }
+  
+      function statusChangeCallback(response) {
+        if(response.status === 'connected') {
+          let token = response.authResponse.accessToken;
+  
+          $.ajax({
+            method: "GET",
+            url: "http://localhost:3001/users/signin/fb",
+            headers: {
+              fbToken: token
+            }
+          })
+          .done((data) => {
+            // data.token
+            localStorage.setItem('appToken', data.token);
+            document.location = './index.html';
+          })
+          .fail((err) => {
+            console.log(err, '<================== ERROR[statusChangeCallback]');
+          });
+  
+        } else {
+          alert('ERROR Login from FACEBOOK');
+        }
+      }
+    </script>
+
+  <div id="login">
+    <div class="container">
+      <h1>Login to HacktivGIT</h1>
+
+      <fb:login-button scope="public_profile,email" onlogin="checkLoginState();">
+      </fb:login-button>
+    </div>
+  </div>
+
+  <div id="main-content" style="display: none">
+
     <div class="container">
       <div class="row">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
@@ -81,10 +142,30 @@
       </div>
 
     </div>
+  </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
       
+      function checkLogin() {
+
+        $.ajax({
+          method: 'GET',
+          url: 'http://localhost:3001/users/check',
+          headers: {
+            apptoken: localStorage.getItem('appToken')
+          }
+        })
+        .done(function(res) {
+          $('#main-content').show();
+        })
+        .fail(function(err) {
+          $('#main-content').hide();
+          $('#login').show();
+          console.log(err); 
+        });
+      }
+
       function findByStarred() {
         $.ajax({
           method: 'GET',
@@ -93,7 +174,6 @@
         .done(function(results) {
 
           results.data.forEach(result => {
-            console.log(result);
             $('#stared-repo').append(
               `
               <div class="card-body">
@@ -152,6 +232,7 @@
         );
       }
 
+      checkLogin();
       findByStarred();
       getFirstRepo();
 
